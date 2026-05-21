@@ -24,7 +24,11 @@ func Init(opts ...Option) error {
 
 	zapLogger := NewZapLogger(LevelToZapLevel(cfg.Level), cfg.Format) // Создаем производительный фундамент (Zap)
 
-	baseHandler := zapslog.NewHandler(zapLogger.Core(), zapslog.WithCaller(cfg.WithCaller)) // Создаем адаптер-мост из zap в стандартный интерфейс slog.Handler
+	baseHandler := zapslog.NewHandler(
+		zapLogger.Core(),
+		zapslog.WithCaller(cfg.WithCaller),
+		zapslog.WithCallerSkip(cfg.CallerSkip),
+	) // Создаем адаптер-мост из zap в стандартный интерфейс slog.Handler
 
 	handler := slog.Handler(baseHandler) // Приведение к интерфейсу slog.Handler необходимо, чтобыMiddleware-обертки могли прозрачно мутировать типы
 

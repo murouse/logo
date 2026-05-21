@@ -6,9 +6,10 @@ import (
 
 // Config объединяет все параметры кастомизации логгера.
 type Config struct {
-	Level       Level   // Уровень логирования (строка: debug, info, warn, error)
-	Format      Format  // Формат вывода логов (строка: json, console)
-	WithCaller  bool    // Флаг добавления места вызова в лог (file.go:line)
+	Level       Level  // Уровень логирования (строка: debug, info, warn, error)
+	Format      Format // Формат вывода логов (строка: json, console)
+	WithCaller  bool   // Флаг добавления места вызова в лог (file.go:line)
+	CallerSkip  int
 	ServiceName *string // Имя сервиса, сквозным образом добавляемое во все записи
 }
 
@@ -18,6 +19,7 @@ func Default() *Config {
 		Level:       LevelDebug,
 		Format:      FormatJSON,
 		WithCaller:  true,
+		CallerSkip:  1,
 		ServiceName: nil,
 	}
 }
@@ -81,6 +83,13 @@ func WithServiceName(serviceName string) Option {
 func WithCaller(enabled bool) Option {
 	return func(config *Config) error {
 		config.WithCaller = enabled
+		return nil
+	}
+}
+
+func WithCallerSkip(skip int) Option {
+	return func(cfg *Config) error {
+		cfg.CallerSkip = skip
 		return nil
 	}
 }
