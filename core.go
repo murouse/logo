@@ -19,6 +19,14 @@ func NewZapLogger(level zapcore.Level, format Format) *zap.Logger {
 		encoder = zapcore.NewJSONEncoder(cfg)
 	case FormatConsole:
 		cfg.EncodeLevel = zapcore.CapitalColorLevelEncoder // Расцвечивает уровни (INFO, ERROR) в терминале
+
+		cfg.EncodeCaller = func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+			// caller.File вернет полный путь, например: /Users/.../soma/entrypoint.go
+			// Можно вырезать из него текущую рабочую директорию или имя модуля
+			// Но самый простой способ — оставить стандартный trim, убедившись, что он не дублирует корень:
+			enc.AppendString(caller.TrimmedPath())
+		}
+
 		encoder = zapcore.NewConsoleEncoder(cfg)
 	}
 
