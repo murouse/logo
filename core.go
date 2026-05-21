@@ -1,7 +1,9 @@
 package logo
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -20,11 +22,25 @@ func NewZapLogger(level zapcore.Level, format Format) *zap.Logger {
 	case FormatConsole:
 		cfg.EncodeLevel = zapcore.CapitalColorLevelEncoder // Расцвечивает уровни (INFO, ERROR) в терминале
 
+		wd, _ := os.Getwd()
 		cfg.EncodeCaller = func(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-			// caller.File вернет полный путь, например: /Users/.../soma/entrypoint.go
-			// Можно вырезать из него текущую рабочую директорию или имя модуля
-			// Но самый простой способ — оставить стандартный trim, убедившись, что он не дублирует корень:
-			enc.AppendString(caller.TrimmedPath())
+			if !caller.Defined {
+				enc.AppendString("undefined")
+				return
+			}
+
+			// По умолчанию берем полный путь к файлу
+			filePath := caller.File
+
+			// Если удалось вычислить относительный путь от папки запуска (soma) — берем его
+			if wd != "" {
+				if rel, err := filepath.Rel(wd, caller.File); err == nil {
+					filePath = rel
+				}
+			}
+
+			// Форматируем как file.go:line
+			enc.AppendString(fmt.Sprintf("%s:%d", filePath, caller.Line))
 		}
 
 		encoder = zapcore.NewConsoleEncoder(cfg)
